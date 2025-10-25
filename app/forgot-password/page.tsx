@@ -1,18 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useI18nContext } from '../../src/contexts/I18nProvider';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, ArrowLeft } from 'lucide-react';
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const { t, locale, setLocale } = useI18nContext();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,41 +18,60 @@ export default function LoginPage() {
     setSuccess('');
 
     try {
-      // 发送登录请求
-      const response = await fetch('/api/auth/login', {
+      // 发送重置密码请求
+      const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email,
-          password
+          email
         })
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.error || '登录失败');
+        setError(result.error || '发送重置邮件失败');
       } else {
-        setSuccess('登录成功！正在跳转到仪表板...');
-        // 保存用户信息到localStorage
-        localStorage.setItem('user', JSON.stringify(result.user));
-        localStorage.setItem('isAuthenticated', 'true');
-        
-        // 跳转到仪表板
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 2000);
+        setSuccess('重置密码邮件已发送！请查收您的邮箱并按照说明重置密码');
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError('登录失败，请重试');
+      console.error('Forgot password error:', error);
+      setError('发送重置邮件失败，请重试');
     }
     
     setLoading(false);
   };
 
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
+            <div className="text-green-600 mb-4">
+              <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">邮件已发送！</h2>
+            <p className="text-gray-600 mb-4">
+              我们已向您的邮箱发送密码重置链接，请查收邮件并按照说明重置密码。
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              如果没有收到邮件，请检查垃圾邮件文件夹。
+            </p>
+            <a 
+              href="/login" 
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              返回登录
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -75,10 +91,10 @@ export default function LoginPage() {
           </select>
         </div>
         <h2 className="mt-6 text-center text-2xl font-bold text-gray-900">
-          登录账户
+          忘记密码
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          输入您的邮箱和密码以登录系统
+          输入您的邮箱地址，我们将发送密码重置链接
         </p>
       </div>
 
@@ -88,12 +104,6 @@ export default function LoginPage() {
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
                 {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md">
-                {success}
               </div>
             )}
 
@@ -120,28 +130,6 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                密码
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="请输入您的密码"
-                />
-              </div>
-            </div>
-
-            <div>
               <button
                 type="submit"
                 disabled={loading}
@@ -150,12 +138,12 @@ export default function LoginPage() {
                 {loading ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    登录中...
+                    发送中...
                   </div>
                 ) : (
                   <div className="flex items-center">
-                    <LogIn className="h-4 w-4 mr-2" />
-                    登录
+                    <Mail className="h-4 w-4 mr-2" />
+                    发送重置链接
                   </div>
                 )}
               </button>
@@ -163,15 +151,9 @@ export default function LoginPage() {
 
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                还没有账户？{' '}
-                <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
-                  立即注册
-                </a>
-              </p>
-              <p className="text-sm text-gray-600 mt-2">
-                忘记密码？{' '}
-                <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                  重置密码
+                记起密码了？{' '}
+                <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                  返回登录
                 </a>
               </p>
             </div>
